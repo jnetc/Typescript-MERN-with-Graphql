@@ -1,0 +1,58 @@
+type Query {
+  house(id: ID!): House!
+  houses: [House!]!
+}
+
+type Mutation {
+  createList(data: CreateListInput!): House!
+  updateList(id: ID!, data: UpdateListInput): House!
+  deleteList(id: ID!): House!
+}
+
+type Subscription {
+  listsub: ListSubscribtion
+}
+
+type House {
+  _id: ID!
+  title: String!
+  imageUrl: String!
+  address: String!
+  price: Int!
+  numOfGuests: Int!
+  numOfBets: Int!
+  numOfBaths: Int!
+  rating: Float!
+}
+
+input CreateListInput {
+  title: String!
+  imageUrl: String!
+  address: String!
+  price: Int!
+  numOfGuests: Int!
+  numOfBets: Int!
+  numOfBaths: Int!
+  rating: Float!
+}
+
+input UpdateListInput {
+  title: String
+  imageUrl: String
+  address: String
+  price: Int
+  numOfGuests: Int
+  numOfBets: Int
+  numOfBaths: Int
+}
+
+enum ListEvents {
+  ADDED
+  UPDATED
+  DELETED
+}
+
+type ListSubscribtion {
+  type: ListEvents
+  data: House
+}
