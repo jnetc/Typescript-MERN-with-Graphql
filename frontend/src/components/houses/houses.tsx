@@ -1,17 +1,20 @@
-import React, {useState, useEffect} from 'react';
-import { server } from '../../lib/api';
+import React from 'react';
+import { gql, useQuery, useMutation } from '@apollo/client';
+
+// import { server } from '../../lib/api';
 import {
   Props,
-  House,
   HousesData,
-  CreateHouse,
-  UpdateHouse,
-  DeleteHouse,
-  ID,
-  DataVariables,
+  // HouseWithId,
+  // CreateHouse,
+  // UpdateHouse,
+  // DeleteHouse,
+  House,
+  // ID,
+  // DataVariables,
 } from './types';
 
-const HOUSES = `
+const HOUSES = gql`
   query Data {
     houses {
       _id
@@ -26,8 +29,8 @@ const HOUSES = `
   }
 `;
 
-const CREATE_HOUSE = `
-  mutation CreateHouse($data: CreateListInput!) {
+const CREATE_HOUSE = gql`
+  mutation CreateList($data: CreateListInput!) {
     createList(data: $data) {
       title
       address
@@ -36,19 +39,23 @@ const CREATE_HOUSE = `
   }
 `;
 
-const UPDATE_HOUSE = `
-  mutation UpdateHouse($id: ID!, $data: UpdateListInput) {
-    updateList(id: $id, data: $data){
+const UPDATE_HOUSE = gql`
+  mutation UpdateList($id: ID!, $data: UpdateListInput) {
+    updateList(id: $id, data: $data) {
       title
+      imageUrl
       address
       price
+      numOfGuests
+      numOfBets
+      numOfBaths
       rating
     }
   }
 `;
 
-const DELETE_HOUSE = `
-  mutation DeleteHouse($id: ID!) {
+const DELETE_HOUSE = gql`
+  mutation DeleteList($id: ID!) {
     deleteList(id: $id) {
       _id
       title
@@ -57,31 +64,24 @@ const DELETE_HOUSE = `
   }
 `;
 
-
 export const Houses = ({ title }: Props) => {
+  // const [houses, setHouses] = useState<House[] | null>(null)
 
-  const [houses, setHouses] = useState<House[] | null>(null)
+  const { loading, data: getData, refetch } = useQuery<HousesData>(HOUSES);
 
-  // В квадратные скобки помещает то, что будет
-  // обновляться, создаваться, удаляться
-  useEffect(() => {
-    fetchHouses()
-  }, [houses])
+  const [createHouse] = useMutation(CREATE_HOUSE);
+  const [updateHouse, {data}] = useMutation(UPDATE_HOUSE);
+  const [deleteHouse] = useMutation(DELETE_HOUSE);
 
-  // Получаем список квартир
-  const fetchHouses = async () => {
-    const { data } = await server.fetch<HousesData>({ query: HOUSES });
-    setHouses(data.houses)
-  };
+  if (loading) return <h2>Loading</h2>;
 
-  const createHouse = async () => {
-    const { data } = await server.fetch<CreateHouse, DataVariables>({
-      query: CREATE_HOUSE,
+  const handlerCreateHouse = async () => {
+    await createHouse({
       variables: {
         data: {
           title: 'Kerrostalo',
           imageUrl: 'kerros.webp',
-          address: 'Vantanportti 5, 56',
+          address: 'Vantanportti 42, 42',
           price: 845000,
           numOfGuests: 1,
           numOfBets: 3,
@@ -90,55 +90,55 @@ export const Houses = ({ title }: Props) => {
         },
       },
     });
-    console.log(data);
+    refetch();
   };
 
-  const updateHouse = async (id: string | undefined, data: House) => {
-    console.log(id, data);
-
-    const res = await server.fetch<UpdateHouse, DataVariables>({
-      query: UPDATE_HOUSE,
+  const handlerUpdateHouse = async (id: string, data: House) => {
+    await updateHouse({
       variables: {
         id,
         data
       },
+      optimisticResponse: true,
+
     });
-    console.log(res);
+    refetch()
   };
 
-  const deleteHouse = async (id: string | undefined ) => {
-    const { data } = await server.fetch<DeleteHouse, ID>({
-      query: DELETE_HOUSE,
-      variables: { id },
+  const handlerDeleteHouse = async (id: string) => {
+    await deleteHouse({
+      variables: { id }
     });
-    console.log(data);
+    refetch()
   };
+  console.log(getData?.houses);
 
-const DomElementHouses = houses?.map(({ _id, ...data}) => {
-  return (
-    <li key={_id}>
-      <span>{_id}</span>
-      <h2>{data.title}</h2>
-      <h5>{data.address}</h5>
-      <p>{data.price}</p>
-      <button onClick={() => updateHouse(_id, {...data, price: 480000})}>Update</button>
-      <button onClick={() => deleteHouse(_id)}>Delete</button>
-    </li>
-  )
-})
+  const DomElementHouses = getData?.houses.map(({ _id, title, address, price }) => {
+    return (
+      <li key={_id}>
+        <span>{_id}</span>
+        <h2>{title}</h2>
+        <h5>{address}</h5>
+        <p>{price}</p>
+        <button
+          onClick={() => handlerUpdateHouse(_id, { price: 500005, title: "Esponkaupunki asunto", address: "Matinkyla 23 a, 34" })}>
+          Update
+        </button>
+        <button onClick={() => handlerDeleteHouse(_id)}>Delete</button>
+      </li>
+    );
+  });
+
   return (
     <>
       <h2>{title}</h2>
-      {/* <button onClick={fetchHouses}>Get query</button> */}
-      <ul>
-        {DomElementHouses}
-      </ul>
+      <ul>{DomElementHouses}</ul>
       <hr />
-      <button onClick={createHouse}>Create query</button>
+      <button onClick={handlerCreateHouse}>Create query</button>
       <hr />
-      {/* <button onClick={updateHouse}>Update query</button> */}
-      <hr />
-      {/* <button onClick={deleteHouse}>Delete query</button> */}
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </>
   );
 };
+
+

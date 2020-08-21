@@ -44,6 +44,7 @@ input UpdateListInput {
   numOfGuests: Int
   numOfBets: Int
   numOfBaths: Int
+  rating: Float
 }
 
 enum ListEvents {

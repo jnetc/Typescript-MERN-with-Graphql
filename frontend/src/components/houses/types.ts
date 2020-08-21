@@ -1,5 +1,4 @@
 export interface House {
-  _id?: string
   title?: string
   imageUrl?: string
   address?: string
@@ -10,9 +9,13 @@ export interface House {
   rating?: number
 }
 
+export interface HouseWithId extends House {
+  _id: string
+}
+
 // Query
 export interface HousesData {
-  houses: House[]
+  houses: HouseWithId[]
 }
 
 // Mutation
@@ -23,12 +26,12 @@ export interface UpdateHouse {
   updateList: House
 }
 export interface DeleteHouse {
-  deleteList: House
+  deleteList: HouseWithId
 }
 
 // Variables
 export interface ID {
-  id?: string
+  id: string
 }
 export interface DataVariables extends ID {
   data: House

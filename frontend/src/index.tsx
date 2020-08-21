@@ -1,12 +1,34 @@
 import React from 'react';
 import { render } from 'react-dom';
-import { Houses } from './components/houses';
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import * as serviceWorker from './serviceWorker';
 
+import { Houses } from './components/houses';
+
+const client = new ApolloClient({
+  uri: '/graphql',
+  cache: new InMemoryCache({
+    typePolicies: {
+      House: {
+        fields: {
+          houses: {
+            merge: (existing, incoming) => {
+              // On initial load or when adding a recipe, offset is 0 and only take the incoming data to avoid duplication
+
+              // This is only for pagination
+              return incoming;
+            },
+          },
+        },
+      },
+    },
+  }),
+});
+
 render(
-  <React.StrictMode>
-    <Houses title="Houses"/>
-  </React.StrictMode>,
+  <ApolloProvider client={client}>
+    <Houses title="Houses" />
+  </ApolloProvider>,
   document.getElementById('root')
 );
 
