@@ -7,22 +7,7 @@ import { Houses } from './components/houses';
 
 const client = new ApolloClient({
   uri: '/graphql',
-  cache: new InMemoryCache({
-    typePolicies: {
-      House: {
-        fields: {
-          houses: {
-            merge: (existing, incoming) => {
-              // On initial load or when adding a recipe, offset is 0 and only take the incoming data to avoid duplication
-
-              // This is only for pagination
-              return incoming;
-            },
-          },
-        },
-      },
-    },
-  }),
+  cache: new InMemoryCache(),
 });
 
 render(
